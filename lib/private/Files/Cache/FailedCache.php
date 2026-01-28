@@ -19,24 +19,20 @@ use OCP\Files\Search\ISearchQuery;
  * Storage placeholder to represent a missing precondition, storage unavailable
  */
 class FailedCache implements ICache {
-	/** @var bool whether to show the failed storage in the ui */
-	private $visible;
 
 	/**
-	 * FailedCache constructor.
-	 *
-	 * @param bool $visible
+	 * @param bool $visible Whether to show the failed storage in the ui
 	 */
-	public function __construct($visible = true) {
-		$this->visible = $visible;
+	public function __construct(
+		private bool $visible = true,
+	) {
 	}
 
-
-	public function getNumericStorageId() {
+	public function getNumericStorageId(): int {
 		return -1;
 	}
 
-	public function get($file) {
+	public function get($file): false|ICacheEntry {
 		if ($file === '') {
 			return new CacheEntry([
 				'fileid' => -1,
@@ -51,11 +47,11 @@ class FailedCache implements ICache {
 		}
 	}
 
-	public function getFolderContents($folder) {
+	public function getFolderContents($folder): array {
 		return [];
 	}
 
-	public function getFolderContentsById($fileId) {
+	public function getFolderContentsById(int $fileId, ?string $mimeTypeFilter = null): array {
 		return [];
 	}
 
@@ -68,15 +64,15 @@ class FailedCache implements ICache {
 	public function update($id, array $data) {
 	}
 
-	public function getId($file) {
+	public function getId($file): int {
 		return -1;
 	}
 
-	public function getParentId($file) {
+	public function getParentId($file): int {
 		return -1;
 	}
 
-	public function inCache($file) {
+	public function inCache($file): bool {
 		return false;
 	}
 

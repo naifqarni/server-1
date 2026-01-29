@@ -35,6 +35,7 @@ use OCP\Files\Storage\IStorage;
 use OCP\FilesMetadata\IFilesMetadataManager;
 use OCP\IDBConnection;
 use OCP\Util;
+use Override;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -199,23 +200,13 @@ class Cache implements ICache {
 		return new CacheEntry($normalized);
 	}
 
-	/**
-	 * get the metadata of all files stored in $folder
-	 *
-	 * @param string $folder
-	 * @return ICacheEntry[]
-	 */
-	public function getFolderContents($folder) {
+	#[Override]
+	public function getFolderContents(string $folder, ?string $mimeTypeFilter = null) {
 		$fileId = $this->getId($folder);
-		return $this->getFolderContentsById($fileId);
+		return $this->getFolderContentsById($fileId, $mimeTypeFilter);
 	}
 
-	/**
-	 * get the metadata of all files stored in $folder
-	 *
-	 * @param int $fileId the file id of the folder
-	 * @return ICacheEntry[]
-	 */
+	#[Override]
 	public function getFolderContentsById(int $fileId, ?string $mimeTypeFilter = null) {
 		if ($fileId > -1) {
 			$query = $this->getQueryBuilder();

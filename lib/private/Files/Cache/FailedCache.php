@@ -47,7 +47,7 @@ class FailedCache implements ICache {
 		}
 	}
 
-	public function getFolderContents($folder): array {
+	public function getFolderContents(string $folder, ?string $mimeTypeFilter = null): array {
 		return [];
 	}
 

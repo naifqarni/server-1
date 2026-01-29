@@ -660,10 +660,10 @@ class Filesystem {
 	 * get the content of a directory
 	 *
 	 * @param string $directory path under datadirectory
-	 * @param string $mimeTypeFilter limit returned content to this mimetype or mimepart
+	 * @param ?non-empty-string $mimeTypeFilter limit returned content to this mimetype or mimepart
 	 * @return \OC\Files\FileInfo[]
 	 */
-	public static function getDirectoryContent($directory, $mimeTypeFilter = '') {
+	public static function getDirectoryContent($directory, ?string $mimeTypeFilter = null): array {
 		return self::$defaultInstance->getDirectoryContent($directory, $mimeTypeFilter);
 	}
 

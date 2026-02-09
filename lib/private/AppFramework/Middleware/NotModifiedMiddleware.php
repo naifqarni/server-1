@@ -27,7 +27,7 @@ class NotModifiedMiddleware extends Middleware {
 		}
 
 		$modifiedSinceHeader = $this->request->getHeader('IF_MODIFIED_SINCE');
-		if ($modifiedSinceHeader !== '' && $response->getLastModified() !== null && trim($modifiedSinceHeader) === $response->getLastModified()->format(\DateTimeInterface::RFC7231)) {
+		if ($modifiedSinceHeader !== '' && $response->getLastModified() !== null && trim($modifiedSinceHeader) === $response->getLastModified()->format('D, d M Y H:i:s \G\M\T')) {
 			$response->setStatus(Http::STATUS_NOT_MODIFIED);
 			return $response;
 		}

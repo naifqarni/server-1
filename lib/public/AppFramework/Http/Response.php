@@ -98,7 +98,7 @@ class Response {
 			$time = \OCP\Server::get(ITimeFactory::class);
 			$expires->setTimestamp($time->getTime());
 			$expires->add(new \DateInterval('PT' . $cacheSeconds . 'S'));
-			$this->addHeader('Expires', $expires->format(\DateTimeInterface::RFC7231));
+			$this->addHeader('Expires', $expires->format('D, d M Y H:i:s \G\M\T'));
 		} else {
 			$this->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 			unset($this->headers['Expires']);
@@ -240,7 +240,7 @@ class Response {
 		];
 
 		if ($this->lastModified) {
-			$mergeWith['Last-Modified'] = $this->lastModified->format(\DateTimeInterface::RFC7231);
+			$mergeWith['Last-Modified'] = $this->lastModified->format('D, d M Y H:i:s \G\M\T');
 		}
 
 		if ($this->ETag) {

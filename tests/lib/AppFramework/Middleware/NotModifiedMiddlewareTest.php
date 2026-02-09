@@ -44,13 +44,13 @@ class NotModifiedMiddlewareTest extends \Test\TestCase {
 			[null, '"etag"', null, '', false],
 			['etag', '"etag"', null, '', true],
 
-			[null, '', $now, $now->format(\DateTimeInterface::RFC7231), true],
+			[null, '', $now, $now->format('D, d M Y H:i:s \G\M\T'), true],
 			[null, '', $now, $now->format(\DateTimeInterface::ATOM), false],
-			[null, '', null, $now->format(\DateTimeInterface::RFC7231), false],
+			[null, '', null, $now->format('D, d M Y H:i:s \G\M\T'), false],
 			[null, '', $now, '', false],
 
 			['etag', '"etag"', $now, $now->format(\DateTimeInterface::ATOM), true],
-			['etag', '"etag"', $now, $now->format(\DateTimeInterface::RFC7231), true],
+			['etag', '"etag"', $now, $now->format('D, d M Y H:i:s \G\M\T'), true],
 		];
 	}
 

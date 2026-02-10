@@ -23,7 +23,6 @@ use OCP\Files\NotPermittedException;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IDBConnection;
-use OCP\Snowflake\ISnowflakeGenerator;
 use Override;
 use Psr\Log\LoggerInterface;
 use RecursiveDirectoryIterator;
@@ -40,11 +39,10 @@ class LocalPreviewStorage implements IPreviewStorage {
 		private readonly IDBConnection $connection,
 		private readonly IMimeTypeDetector $mimeTypeDetector,
 		private readonly LoggerInterface $logger,
-		private readonly ISnowflakeGenerator $generator,
 		private readonly IMimeTypeLoader $mimeTypeLoader,
 	) {
 		$this->instanceId = $this->config->getSystemValueString('instanceid');
-		$this->rootFolder = $this->config->getSystemValue('datadirectory', OC::$SERVERROOT . '/data');
+		$this->rootFolder = $this->config->getSystemValueString('datadirectory', OC::$SERVERROOT . '/data');
 	}
 
 	#[Override]
@@ -139,17 +137,28 @@ class LocalPreviewStorage implements IPreviewStorage {
 
 					if ($result === false) {
 						// original file is deleted
+						$this->logger->warning('Original file ' . $preview->getFileId() . ' was not found. Deleting preview at ' . $file->getRealPath());
 						@unlink($file->getRealPath());
 						continue;
 					}
 
 					if ($checkForFileCache) {
 						$relativePath = str_replace($this->rootFolder . '/', '', $file->getRealPath());
-						$rowAffected = $qb->delete('filecache')
+						$qb = $this->connection->getQueryBuilder();
+						$result = $qb->select('fileid', 'storage', 'etag', 'mimetype', 'parent')
+							->from('filecache')
 							->where($qb->expr()->eq('path_hash', $qb->createNamedParameter(md5($relativePath))))
-							->executeStatement();
-						if ($rowAffected > 0) {
-							$this->deleteParentsFromFileCache(dirname($relativePath));
+							->runAcrossAllShards()
+							->setMaxResults(1)
+							->executeQuery()
+							->fetchAssociative();
+
+						if ($result !== false) {
+							$qb->delete('filecache')
+								->where($qb->expr()->eq('fileid', $qb->createNamedParameter($result['fileid'])))
+								->andWhere($qb->expr()->eq('storage', $qb->createNamedParameter($result['storage'])))
+								->executeStatement();
+							$this->deleteParentsFromFileCache($result['parent'], $result['storage']);
 						}
 					}
 
@@ -182,65 +191,45 @@ class LocalPreviewStorage implements IPreviewStorage {
 		return $previewsFound;
 	}
 
-	private function deleteParentsFromFileCache(string $dirname): void {
+	/**
+	 * Recursive method that deletes the folder and its parent folders if it's not
+	 * empty.
+	 */
+	private function deleteParentsFromFileCache(int $folderId, int $storageId): void {
 		$qb = $this->connection->getQueryBuilder();
-
 		$result = $qb->select('fileid', 'path', 'storage', 'parent')
 			->from('filecache')
-			->where($qb->expr()->eq('path_hash', $qb->createNamedParameter(md5($dirname))))
+			->where($qb->expr()->eq('parent', $qb->createNamedParameter($folderId)))
 			->setMaxResults(1)
 			->runAcrossAllShards()
 			->executeQuery()
-			->fetchAll();
+			->fetchAssociative();
 
-		if (empty($result)) {
+		if ($result !== false) {
+			// there are other files in the directory, don't delete yet
 			return;
 		}
 
-		$this->connection->beginTransaction();
+		// Get new parent
+		$qb = $this->connection->getQueryBuilder();
+		$result = $qb->select('fileid', 'path', 'parent')
+			->from('filecache')
+			->where($qb->expr()->eq('fileid', $qb->createNamedParameter($folderId)))
+			->andWhere($qb->expr()->eq('storage', $qb->createNamedParameter($storageId)))
+			->setMaxResults(1)
+			->executeQuery()
+			->fetchAssociative();
 
-		$parentId = $result[0]['parent'];
-		$fileId = $result[0]['fileid'];
-		$storage = $result[0]['storage'];
+		if ($result !== false) {
+			$parentFolderId = $result['parent'];
 
-		try {
-			while (true) {
-				$qb = $this->connection->getQueryBuilder();
-				$childs = $qb->select('fileid', 'path', 'storage')
-					->from('filecache')
-					->where($qb->expr()->eq('parent', $qb->createNamedParameter($fileId)))
-					->hintShardKey('storage', $storage)
-					->executeQuery()
-					->fetchAll();
+			$qb = $this->connection->getQueryBuilder();
+			$qb->delete('filecache')
+				->where($qb->expr()->eq('fileid', $qb->createNamedParameter($folderId)))
+				->andWhere($qb->expr()->eq('storage', $qb->createNamedParameter($storageId)))
+				->executeStatement();
 
-				if (!empty($childs)) {
-					break;
-				}
-
-				$qb = $this->connection->getQueryBuilder();
-				$qb->delete('filecache')
-					->where($qb->expr()->eq('fileid', $qb->createNamedParameter($fileId)))
-					->hintShardKey('storage', $result[0]['storage'])
-					->executeStatement();
-
-				$qb = $this->connection->getQueryBuilder();
-				$result = $qb->select('fileid', 'path', 'storage', 'parent')
-					->from('filecache')
-					->where($qb->expr()->eq('fileid', $qb->createNamedParameter($parentId)))
-					->setMaxResults(1)
-					->hintShardKey('storage', $storage)
-					->executeQuery()
-					->fetchAll();
-
-				if (empty($result)) {
-					break;
-				}
-
-				$fileId = $parentId;
-				$parentId = $result[0]['parent'];
-			}
-		} finally {
-			$this->connection->commit();
+			$this->deleteParentsFromFileCache($parentFolderId, $storageId);
 		}
 	}
 }

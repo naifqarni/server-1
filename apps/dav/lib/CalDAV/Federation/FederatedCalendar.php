@@ -31,6 +31,7 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 	private string $principalUri;
 	private int $calendarId;
 	private string $calendarUri;
+	private ?array $calendarACL = null;
 	private FederatedCalendarEntity $federationInfo;
 
 	public function __construct(
@@ -75,6 +76,10 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 	}
 
 	public function getACL() {
+
+		if ($this->calendarACL !== null) {
+			return $this->calendarACL;
+		}
 
 		$permissions = $this->federationInfo->getPermissions();
 		// default permission
@@ -122,6 +127,9 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 				'protected' => true,
 			];
 		}
+
+		// cache the calculated ACL for later use
+		$this->calendarACL = $acl;
 
 		return $acl;
 	}
@@ -187,16 +195,15 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 		if (!$obj) {
 			throw new NotFound('Calendar object not found');
 		}
-		$obj['acl'] = $this->getChildACL();
 
 		return new FederatedCalendarObject($this, $obj);
 	}
 
 	public function getChildren() {
 		$objs = $this->caldavBackend->getCalendarObjects($this->federationInfo->getId(), $this->getCalendarType());
+
 		$children = [];
 		foreach ($objs as $obj) {
-			$obj['acl'] = $this->getChildACL();
 			$children[] = new FederatedCalendarObject($this, $obj);
 		}
 
@@ -205,9 +212,9 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 
 	public function getMultipleChildren(array $paths) {
 		$objs = $this->caldavBackend->getMultipleCalendarObjects($this->federationInfo->getId(), $paths, $this->getCalendarType());
+		
 		$children = [];
 		foreach ($objs as $obj) {
-			$obj['acl'] = $this->getChildACL();
 			$children[] = new FederatedCalendarObject($this, $obj);
 		}
 

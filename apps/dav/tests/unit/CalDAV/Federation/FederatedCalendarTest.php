@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace OCA\DAV\Tests\unit\CalDAV\Federation;
 
+use OCA\DAV\CalDAV\CalDavBackend;
 use OCA\DAV\CalDAV\Federation\FederatedCalendar;
 use OCA\DAV\CalDAV\Federation\FederatedCalendarEntity;
 use OCA\DAV\CalDAV\Federation\FederatedCalendarMapper;
@@ -16,8 +17,6 @@ use OCA\DAV\CalDAV\Federation\FederatedCalendarObject;
 use OCA\DAV\CalDAV\Federation\FederatedCalendarSyncService;
 use OCP\Constants;
 use PHPUnit\Framework\MockObject\MockObject;
-use Psr\Log\LoggerInterface;
-use Sabre\CalDAV\Backend\BackendInterface;
 use Sabre\DAV\Exception\MethodNotAllowed;
 use Sabre\DAV\Exception\NotFound;
 use Sabre\DAV\PropPatch;
@@ -26,19 +25,17 @@ use Test\TestCase;
 class FederatedCalendarTest extends TestCase {
 	private FederatedCalendar $federatedCalendar;
 
-	private LoggerInterface&MockObject $logger;
 	private FederatedCalendarMapper&MockObject $federatedCalendarMapper;
 	private FederatedCalendarSyncService&MockObject $federatedCalendarService;
-	private BackendInterface&MockObject $caldavBackend;
+	private CalDavBackend&MockObject $caldavBackend;
 	private FederatedCalendarEntity $federationInfo;
 
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->federatedCalendarMapper = $this->createMock(FederatedCalendarMapper::class);
 		$this->federatedCalendarService = $this->createMock(FederatedCalendarSyncService::class);
-		$this->caldavBackend = $this->createMock(BackendInterface::class);
+		$this->caldavBackend = $this->createMock(CalDavBackend::class);
 
 		$this->federationInfo = new FederatedCalendarEntity();
 		$this->federationInfo->setId(10);
@@ -62,7 +59,6 @@ class FederatedCalendarTest extends TestCase {
 		];
 
 		$this->federatedCalendar = new FederatedCalendar(
-			$this->logger,
 			$this->federatedCalendarMapper,
 			$this->federatedCalendarService,
 			$this->caldavBackend,

@@ -10,12 +10,10 @@ declare(strict_types=1);
 namespace OCA\DAV\CalDAV\Federation;
 
 use OCA\DAV\CalDAV\CalDavBackend;
-use Psr\Log\LoggerInterface;
 
 class FederatedCalendarFactory {
 
 	public function __construct(
-		private readonly LoggerInterface $logger,
 		private readonly FederatedCalendarMapper $federatedCalendarMapper,
 		private readonly FederatedCalendarSyncService $federatedCalendarService,
 		private readonly CalDavBackend $caldavBackend,
@@ -24,7 +22,6 @@ class FederatedCalendarFactory {
 
 	public function createFederatedCalendar(array $calendarInfo): FederatedCalendar {
 		return new FederatedCalendar(
-			$this->logger,
 			$this->federatedCalendarMapper,
 			$this->federatedCalendarService,
 			$this->caldavBackend,

@@ -33,10 +33,10 @@ class FederatedCalendarObject implements ICalendarObject, IACL {
 		return $this->objectData['calendardata'];
 	}
 
-	public function put($calendarData) {
+	public function put($data) {
 
-		$etag = $this->calendarObject->updateFile($this->objectData['uri'], $calendarData);
-		$this->objectData['calendardata'] = $calendarData;
+		$etag = $this->calendarObject->updateFile($this->objectData['uri'], $data);
+		$this->objectData['calendardata'] = $data;
 		$this->objectData['etag'] = $etag;
 
 		return $etag;

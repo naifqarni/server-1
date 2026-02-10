@@ -229,7 +229,7 @@ abstract class ASyncService {
 
 		// Extract and return the ETag from the response
 		$etag = $response->getHeader('ETag');
-		return is_array($etag) ? $etag[0] : (string)$etag;
+		return $etag;
 	}
 
 	/**

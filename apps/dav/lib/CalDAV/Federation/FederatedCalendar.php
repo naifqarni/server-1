@@ -11,8 +11,6 @@ namespace OCA\DAV\CalDAV\Federation;
 
 use OCA\DAV\CalDAV\CalDavBackend;
 use OCP\Constants;
-use Psr\Log\LoggerInterface;
-use Sabre\CalDAV\Backend;
 use Sabre\CalDAV\ICalendar;
 use Sabre\CalDAV\Plugin;
 use Sabre\CalDAV\Xml\Property\SupportedCalendarComponentSet;
@@ -29,20 +27,17 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 	private const DAV_PROPERTY_CALENDAR_COLOR = '{http://apple.com/ns/ical/}calendar-color';
 
 	private string $principalUri;
-	private int $calendarId;
 	private string $calendarUri;
 	private ?array $calendarACL = null;
 	private FederatedCalendarEntity $federationInfo;
 
 	public function __construct(
-		private readonly LoggerInterface $logger,
 		private readonly FederatedCalendarMapper $federatedCalendarMapper,
 		private readonly FederatedCalendarSyncService $federatedCalendarService,
-		private readonly Backend\BackendInterface $caldavBackend,
+		private readonly CalDavBackend $caldavBackend,
 		$calendarInfo,
 	) {
 		$this->principalUri = $calendarInfo['principaluri'];
-		$this->calendarId = $calendarInfo['id'];
 		$this->calendarUri = $calendarInfo['uri'];
 		$this->federationInfo = $federatedCalendarMapper->findByUri($this->principalUri, $this->calendarUri);
 	}
@@ -192,7 +187,7 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 	public function getChild($name) {
 		$obj = $this->caldavBackend->getCalendarObject($this->federationInfo->getId(), $name, $this->getCalendarType());
 
-		if (!$obj) {
+		if ($obj === null) {
 			throw new NotFound('Calendar object not found');
 		}
 
@@ -212,7 +207,7 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 
 	public function getMultipleChildren(array $paths) {
 		$objs = $this->caldavBackend->getMultipleCalendarObjects($this->federationInfo->getId(), $paths, $this->getCalendarType());
-		
+
 		$children = [];
 		foreach ($objs as $obj) {
 			$children[] = new FederatedCalendarObject($this, $obj);
@@ -223,11 +218,7 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 
 	public function childExists($name) {
 		$obj = $this->caldavBackend->getCalendarObject($this->federationInfo->getId(), $name, $this->getCalendarType());
-		if (!$obj) {
-			return false;
-		} else {
-			return true;
-		}
+		return $obj !== null;
 	}
 
 	public function createFile($name, $data = null) {
@@ -239,9 +230,7 @@ class FederatedCalendar implements ICalendar, IProperties, IMultiGet {
 		$etag = $this->federatedCalendarService->createCalendarObject($this->federationInfo, $name, $data);
 
 		// Then store locally
-		$localEtag = $this->caldavBackend->createCalendarObject($this->federationInfo->getId(), $name, $data, $this->getCalendarType());
-
-		return $localEtag;
+		return $this->caldavBackend->createCalendarObject($this->federationInfo->getId(), $name, $data, $this->getCalendarType());
 	}
 
 	public function updateFile($name, $data = null) {

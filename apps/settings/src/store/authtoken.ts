@@ -11,7 +11,7 @@ import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 import logger from '../logger.ts'
 
-const BASE_URL = generateUrl('/settings/personal/authtokens')
+const DEFAULT_BASE_URL = generateUrl('/settings/personal/authtokens')
 addPasswordConfirmationInterceptors(axios)
 
 /**
@@ -68,16 +68,37 @@ export const useAuthTokenStore = defineStore('auth-token', {
 	state() {
 		return {
 			tokens: loadState<IToken[]>('settings', 'app_tokens', []),
+			baseUrl: DEFAULT_BASE_URL,
 		}
 	},
 	actions: {
+		/**
+		 * Set the base URL for API calls
+		 * @param url The new base URL
+		 */
+		setBaseUrl(url: string) {
+			this.baseUrl = url
+		},
+
+		/**
+		 * Load tokens from the server
+		 */
+		async loadTokens() {
+			try {
+				const { data } = await axios.get<IToken[]>(this.baseUrl)
+				this.tokens = data
+			} catch (error) {
+				logger.error('Could not load tokens', { error })
+			}
+		},
+
 		/**
 		 * Update a token on server
 		 *
 		 * @param token Token to update
 		 */
 		async updateToken(token: IToken) {
-			const { data } = await axios.put(`${BASE_URL}/${token.id}`, token)
+			const { data } = await axios.put(`${this.baseUrl}/${token.id}`, token)
 			return data
 		},
 
@@ -90,7 +111,7 @@ export const useAuthTokenStore = defineStore('auth-token', {
 			logger.debug('Creating a new app token')
 
 			try {
-				const { data } = await axios.post<ITokenResponse>(BASE_URL, { name, oneTime: true }, { confirmPassword: PwdConfirmationMode.Strict })
+				const { data } = await axios.post<ITokenResponse>(this.baseUrl, { name, oneTime: true }, { confirmPassword: PwdConfirmationMode.Strict })
 
 				this.tokens.push(data.deviceToken)
 				logger.debug('App token created')
@@ -111,7 +132,7 @@ export const useAuthTokenStore = defineStore('auth-token', {
 			this.tokens = this.tokens.filter(({ id }) => id !== token.id)
 
 			try {
-				await axios.delete(`${BASE_URL}/${token.id}`)
+				await axios.delete(`${this.baseUrl}/${token.id}`)
 				logger.debug('App token deleted')
 				return true
 			} catch (error) {
@@ -139,7 +160,7 @@ export const useAuthTokenStore = defineStore('auth-token', {
 					return
 				}
 
-				await axios.post(`${BASE_URL}/wipe/${token.id}`)
+				await axios.post(`${this.baseUrl}/wipe/${token.id}`)
 				logger.debug('App token marked for wipe', { token })
 
 				token.type = TokenType.WIPING_TOKEN

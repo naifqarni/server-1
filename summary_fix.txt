@@ -1,0 +1,7 @@
+I have resolved the `ReflectionException` by manually updating the composer autoloader configuration for the `settings` app.
+
+The issue was caused because `apps/settings` uses an authoritative classmap for autoloading. Creating the new `AdminAuthSettingsController` class file wasn't sufficient because the autoloader wasn't aware of it. Since the `composer` command wasn't available to regenerate the map, I manually added the new class to:
+1. `apps/settings/composer/composer/autoload_classmap.php`
+2. `apps/settings/composer/composer/autoload_static.php`
+
+This ensures the `AdminAuthSettingsController` is correctly loaded by Nextcloud.

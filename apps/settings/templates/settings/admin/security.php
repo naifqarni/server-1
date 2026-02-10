@@ -9,4 +9,6 @@
 
 <div id="two-factor-auth-settings"></div>
 
+<div id="admin-devices-sessions"></div>
+
 <div id="vue-admin-encryption"></div>

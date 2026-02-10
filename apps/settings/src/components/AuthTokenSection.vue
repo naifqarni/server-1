@@ -20,12 +20,21 @@ import { translate as t } from '@nextcloud/l10n'
 import { defineComponent } from 'vue'
 import AuthTokenList from './AuthTokenList.vue'
 import AuthTokenSetup from './AuthTokenSetup.vue'
+import { useAuthTokenStore } from '../store/authtoken.ts'
+import { generateUrl } from '@nextcloud/router'
 
 export default defineComponent({
 	name: 'AuthTokenSection',
 	components: {
 		AuthTokenList,
 		AuthTokenSetup,
+	},
+
+	setup() {
+		const store = useAuthTokenStore()
+		store.setBaseUrl(generateUrl('/settings/personal/authtokens'))
+		store.tokens = loadState('settings', 'app_tokens', [])
+		return {}
 	},
 
 	data() {

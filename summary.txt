@@ -1,0 +1,26 @@
+I have implemented the "Devices & Sessions" feature for Admin settings.
+
+Here is a summary of the changes:
+
+1.  **Backend (Controller):**
+    *   Created `apps/settings/lib/Controller/AdminAuthSettingsController.php` to handle listing, revoking, and wiping tokens for a specific user.
+    *   Registered new routes in `apps/settings/appinfo/routes.php`.
+
+2.  **Frontend (Store):**
+    *   Refactored `apps/settings/src/store/authtoken.ts` to support a dynamic `baseUrl`, allowing it to switch between Personal and Admin API endpoints.
+    *   Added `loadTokens` action to fetch tokens from the backend.
+
+3.  **Frontend (Component):**
+    *   Created `apps/settings/src/components/AdminAuthTokenSection.vue`. It allows entering a username to fetch and manage their sessions.
+    *   It reuses the existing `AuthTokenList` component.
+
+4.  **Integration:**
+    *   Updated `apps/settings/src/main-admin-security.js` to mount the new component and initialize Pinia (required for the store).
+    *   Updated `apps/settings/templates/settings/admin/security.php` to include the container for the new component.
+    *   Updated `apps/settings/src/components/AuthTokenSection.vue` (Personal settings) to ensure it resets the store to the personal context, preventing state leakage between Admin and Personal views.
+
+You may need to rebuild the frontend assets to see the changes:
+```bash
+npm run build
+```
+(or `npm run build` inside `apps/settings` if configured, but root build usually handles it).

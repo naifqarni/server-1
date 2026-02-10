@@ -21,6 +21,7 @@ return array(
     'OCA\\Settings\\Command\\AdminDelegation\\Show' => $baseDir . '/../lib/Command/AdminDelegation/Show.php',
     'OCA\\Settings\\ConfigLexicon' => $baseDir . '/../lib/ConfigLexicon.php',
     'OCA\\Settings\\Controller\\AISettingsController' => $baseDir . '/../lib/Controller/AISettingsController.php',
+    'OCA\\Settings\\Controller\\AdminAuthSettingsController' => $baseDir . '/../lib/Controller/AdminAuthSettingsController.php',
     'OCA\\Settings\\Controller\\AdminSettingsController' => $baseDir . '/../lib/Controller/AdminSettingsController.php',
     'OCA\\Settings\\Controller\\AppSettingsController' => $baseDir . '/../lib/Controller/AppSettingsController.php',
     'OCA\\Settings\\Controller\\AuthSettingsController' => $baseDir . '/../lib/Controller/AuthSettingsController.php',

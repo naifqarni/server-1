@@ -16,6 +16,10 @@ return [
 
 		['name' => 'AuthSettings#wipe', 'url' => '/settings/personal/authtokens/wipe/{id}', 'verb' => 'POST' , 'root' => ''],
 
+		['name' => 'AdminAuthSettings#index', 'url' => '/settings/admin/users/{userId}/authtokens', 'verb' => 'GET' , 'root' => ''],
+		['name' => 'AdminAuthSettings#destroy', 'url' => '/settings/admin/users/{userId}/authtokens/{id}', 'verb' => 'DELETE' , 'root' => ''],
+		['name' => 'AdminAuthSettings#wipe', 'url' => '/settings/admin/users/{userId}/authtokens/wipe/{id}', 'verb' => 'POST' , 'root' => ''],
+
 		['name' => 'MailSettings#setMailSettings', 'url' => '/settings/admin/mailsettings', 'verb' => 'POST' , 'root' => ''],
 		['name' => 'MailSettings#storeCredentials', 'url' => '/settings/admin/mailsettings/credentials', 'verb' => 'POST' , 'root' => ''],
 		['name' => 'MailSettings#sendTestMail', 'url' => '/settings/admin/mailtest', 'verb' => 'POST' , 'root' => ''],
